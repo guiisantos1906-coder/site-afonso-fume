@@ -1,847 +1,505 @@
 
 /* ==========================================
    AFONSO FUMÊ
-   CSS principal do site
+   JavaScript principal do site
 ========================================== */
 
 
 /* ==========================================
-   1. CORES E VARIÁVEIS
+   1. CATÁLOGO DE PRODUTOS
 ========================================== */
 
-:root {
-    --bg: #0b100d;
-    --panel: #17211a;
-    --green: #4cc966;
-    --white: #f4f8f4;
-    --muted: #b6c2b9;
-}
+// Edite esta lista quando receber os produtos reais.
+//
+// preco: null significa que o valor será
+// consultado pelo WhatsApp.
+//
+// Não publique produtos fictícios como
+// ofertas reais.
+
+const produtos = [
+    {
+        id: 1,
+        nome: 'Tapetes automotivos',
+        categoria: 'Interior',
+        emoji: '🚘',
+        preco: null
+    },
+
+    {
+        id: 2,
+        nome: 'Suporte para celular',
+        categoria: 'Interior',
+        emoji: '📱',
+        preco: null
+    },
+
+    {
+        id: 3,
+        nome: 'Palhetas de limpador',
+        categoria: 'Exterior',
+        emoji: '🌧️',
+        preco: null
+    },
+
+    {
+        id: 4,
+        nome: 'Organizador de porta-malas',
+        categoria: 'Utilidades',
+        emoji: '🧰',
+        preco: null
+    }
+];
 
 
 /* ==========================================
    2. CONFIGURAÇÕES GERAIS
 ========================================== */
 
-* {
-    box-sizing: border-box;
-}
+// WhatsApp da loja
 
-html {
-    scroll-behavior: smooth;
-}
+const WHATSAPP = '5583988407190';
 
-body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--white);
-    font: 16px/1.6 system-ui, -apple-system, Segoe UI, sans-serif;
-}
+// Lista de produtos adicionados ao carrinho
 
-a {
-    text-decoration: none;
-    color: inherit;
-}
+let carrinho = [];
 
-button {
-    font: inherit;
-    cursor: pointer;
-}
+// Facilita a seleção de elementos HTML
 
-button:focus-visible,
-a:focus-visible {
-    outline: 3px solid #a5f9b5;
-    outline-offset: 3px;
-}
+const $ = (seletor) => document.querySelector(seletor);
+
+// Formatação de valores em reais
+
+const moeda = (valor) => {
+    return valor.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
+};
 
 
 /* ==========================================
-   3. CABEÇALHO E MENU
+   3. EXIBIR PRODUTOS NO CATÁLOGO
 ========================================== */
 
-.topo {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+function renderProdutos(filtro = 'Todos') {
 
-    background: #0b100df2;
-    backdrop-filter: blur(10px);
+    // Filtra os produtos pela categoria
 
-    border-bottom: 1px solid #294031;
+    const produtosFiltrados = produtos.filter((produto) => {
+        return filtro === 'Todos' ||
+               produto.categoria === filtro;
+    });
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    // Cria os cartões dos produtos
 
-    padding: 15px max(5%, calc((100% - 1200px) / 2));
-    gap: 18px;
-}
+    $('#produtos').innerHTML = produtosFiltrados.map((produto) => {
 
-.marca,
-footer strong {
-    font-size: 1.4rem;
-    font-weight: 900;
-    letter-spacing: 0.03em;
-}
+        const preco = produto.preco === null
+            ? 'Preço a consultar'
+            : moeda(produto.preco);
 
-.marca span,
-footer span {
-    color: var(--green);
-}
+        return `
+            <article class="produto">
 
-nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
+                <div class="emoji" aria-hidden="true">
+                    ${produto.emoji}
+                </div>
 
-nav a:hover {
-    color: var(--green);
-}
+                <h3>${produto.nome}</h3>
 
-.cart-btn,
-.menu-toggle {
-    background: #1c3524;
-    border: 1px solid #477d50;
-    color: white;
+                <p>
+                    ${produto.categoria} • Item demonstrativo
+                </p>
 
-    border-radius: 10px;
-    padding: 8px 12px;
-}
+                <p class="preco">
+                    ${preco}
+                </p>
 
-.cart-btn {
-    border-radius: 7px;
-    transition: background 0.2s ease, transform 0.2s ease;
-}
+                <button data-add="${produto.id}">
+                    Adicionar ao carrinho
+                </button>
 
-.menu-toggle {
-    display: none;
-}
+            </article>
+        `;
 
-
-/* ==========================================
-   4. PÁGINA INICIAL
-========================================== */
-
-.hero {
-    max-width: 1250px;
-    margin: auto;
-    min-height: 570px;
-
-    padding: 75px 5%;
-
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    align-items: center;
-    gap: 52px;
-}
-
-.hero h1 {
-    font-size: clamp(2.2rem, 4.2vw, 4.2rem);
-    line-height: 1.13;
-    letter-spacing: -0.035em;
-    margin: 18px 0;
-}
-
-.hero em {
-    font-style: normal;
-    color: var(--green);
-}
-
-.hero p {
-    color: var(--muted);
-}
-
-.tag {
-    color: var(--green);
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-}
-
-.fachada {
-    width: 100%;
-    max-height: 420px;
-
-    object-fit: cover;
-
-    border-radius: 14px;
-    border: 1px solid #375b40;
-
-    box-shadow: 0 16px 44px #0006;
-}
-
-
-/* ==========================================
-   5. BOTÕES
-========================================== */
-
-.acoes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-
-    margin-top: 25px;
-}
-
-.botao {
-    display: inline-block;
-
-    background: var(--green);
-    color: #0a180d;
-
-    font-weight: 800;
-
-    border: 0;
-    border-radius: 7px;
-
-    padding: 12px 21px;
-
-    transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.botao:hover {
-    background: #83eb96;
-    transform: translateY(-1px);
-}
-
-.secundario {
-    background: transparent;
-    color: white;
-    border: 1px solid #6e9876;
-}
-
-
-/* ==========================================
-   6. SEÇÕES GERAIS
-========================================== */
-
-.secao {
-    padding: 85px max(5%, calc((100% - 1200px) / 2));
-}
-
-.secao h2 {
-    font-size: clamp(1.9rem, 3vw, 2.7rem);
-    letter-spacing: -0.025em;
-    margin: 8px 0 20px;
-}
-
-
-/* ==========================================
-   7. SOBRE NÓS
-========================================== */
-
-.sobre {
-    background: #121b15;
-    text-align: center;
-}
-
-.sobre p {
-    max-width: 750px;
-    margin: auto;
-    color: var(--muted);
-}
-
-
-/* ==========================================
-   8. SERVIÇOS
-========================================== */
-
-.cards,
-.produtos {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
-}
-
-.card,
-.produto {
-    background: var(--panel);
-
-    border: 1px solid #2d4634;
-    border-radius: 12px;
-
-    padding: 22px;
-
-    transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.card:hover,
-.produto:hover {
-    border-color: #53825e;
-    transform: translateY(-2px);
-}
-
-.card h3,
-.produto h3 {
-    margin: 8px 0;
-}
-
-.card p,
-.produto p {
-    color: var(--muted);
-    font-size: 0.94rem;
-}
-
-.simbolo {
-    font-size: 2.4rem;
-}
-
-
-/* ==========================================
-   9. CATÁLOGO DE PRODUTOS
-========================================== */
-
-.fundo {
-    background: #101913;
-}
-
-.sub {
-    color: var(--muted);
-}
-
-
-/* Filtros */
-
-.filtros {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-
-    margin: 22px 0;
-}
-
-.filtro {
-    background: #1d2b21;
-
-    border: 1px solid #36513b;
-    border-radius: 7px;
-
-    color: white;
-
-    padding: 8px 15px;
-}
-
-.filtro.ativo {
-    background: var(--green);
-    color: #071209;
-}
-
-
-/* Cartões dos produtos */
-
-.produto {
-    display: flex;
-    flex-direction: column;
-}
-
-.produto .emoji {
-    height: 110px;
-
-    display: grid;
-    place-items: center;
-
-    font-size: 4rem;
-
-    background: #26372b;
-    border-radius: 12px;
-}
-
-.produto .preco {
-    margin-top: auto;
-
-    color: #8de99d;
-    font-weight: 800;
-}
-
-.produto button {
-    margin-top: 12px;
-
-    background: #335c3d;
-    color: white;
-
-    border: 1px solid #518a5c;
-    border-radius: 7px;
-
-    padding: 10px;
-
-    transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.produto button:hover {
-    transform: translateY(-1px);
-}
-
-
-/* ==========================================
-   10. GALERIA
-========================================== */
-
-.galeria {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.galeria img {
-    width: 100%;
-    height: 330px;
-
-    object-fit: cover;
-    border-radius: 12px;
-}
-
-.galeria-placeholder {
-    background: var(--panel);
-
-    border: 1px dashed #54745b;
-    border-radius: 12px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-
-    text-align: center;
-    padding: 24px;
-}
-
-.galeria-placeholder span {
-    font-size: 3rem;
-}
-
-
-/* ==========================================
-   11. HORÁRIO DE FUNCIONAMENTO
-========================================== */
-
-.secao-horarios {
-    background: #0d1510;
-
-    padding-top: 62px;
-    padding-bottom: 62px;
-}
-
-.horarios-loja {
-    margin: 24px 0;
-    padding: 18px 20px;
-
-    background: #17241b;
-
-    border: 1px solid #35503b;
-    border-radius: 10px;
-}
-
-.horarios-loja h4 {
-    margin: 0 0 12px;
-
-    font-size: 1.05rem;
-    color: #f4f7f4;
-}
-
-.horarios-loja dl {
-    margin: 0;
-}
-
-.horarios-loja dl > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-
-    padding: 9px 0;
-
-    border-bottom: 1px solid #314437;
-}
-
-.horarios-loja dt {
-    color: #d6e2d8;
-}
-
-.horarios-loja dd {
-    margin: 0;
-
-    font-weight: 600;
-    color: #fff;
-
-    text-align: right;
-}
-
-.horarios-loja .aviso-horario {
-    font-size: 0.85rem;
-    margin: 12px 0 0;
-    color: #a9b7ad;
-}
-
-
-/* Ajustes da seção independente */
-
-.secao-horarios .horarios-loja {
-    max-width: 740px;
-
-    margin: 22px 0 0;
-    padding: 22px 28px;
-}
-
-.secao-horarios .horarios-loja dl > div:last-child {
-    border-bottom: 0;
-}
-
-
-/* ==========================================
-   12. LOCALIZAÇÃO DA LOJA
-========================================== */
-
-.localizacao {
-    background: #101913;
-}
-
-.localizacao-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-
-    gap: 32px;
-    align-items: center;
-}
-
-.localizacao-info h3 {
-    font-size: 1.45rem;
-    margin: 0 0 12px;
-}
-
-.localizacao-info p {
-    color: var(--muted);
-    margin: 0 0 18px;
-}
-
-.localizacao-info address {
-    font-style: normal;
-    font-weight: 600;
-    line-height: 1.8;
-}
-
-
-/* Google Maps */
-
-.mapa-container {
-    background: #19251c;
-
-    border: 1px solid #36513b;
-    border-radius: 12px;
-
-    overflow: hidden;
-    min-height: 350px;
-}
-
-.mapa-container iframe {
-    display: block;
-    width: 100%;
-    height: 350px;
-}
-
-
-/* ==========================================
-   13. CONTATO
-========================================== */
-
-.contato {
-    text-align: center;
-    background: #17251b;
-}
-
-.contato p {
-    color: var(--muted);
-}
-
-.contato .detalhe {
-    font-size: 0.9rem;
-    margin-top: 18px;
-}
-
-
-/* ==========================================
-   14. RODAPÉ
-========================================== */
-
-footer {
-    text-align: center;
-    padding: 40px 20px;
-
-    color: var(--muted);
-}
-
-footer strong {
-    color: white;
-}
-
-
-/* ==========================================
-   15. FUNDO DO CARRINHO
-========================================== */
-
-.overlay {
-    position: fixed;
-    inset: 0;
-
-    background: #000b;
-    z-index: 20;
-}
-
-.overlay[hidden] {
-    display: none;
-}
-
-
-/* ==========================================
-   16. PAINEL DO CARRINHO
-========================================== */
-
-.carrinho {
-    position: fixed;
-    right: 0;
-    top: 0;
-
-    height: 100dvh;
-    width: min(430px, 100%);
-
-    background: #132017;
-
-    border-left: 1px solid #45634b;
-
-    z-index: 21;
-
-    transform: translateX(110%);
-    transition: transform 0.25s;
-
-    padding: 25px;
-    overflow-y: auto;
-}
-
-.carrinho.aberto {
-    transform: translateX(0);
-}
-
-.cabecalho-carrinho {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.cabecalho-carrinho button {
-    background: none;
-    color: white;
-
-    border: 0;
-    font-size: 1.5rem;
-}
-
-.aviso {
-    font-size: 0.84rem;
-    color: #b9c9bd;
-}
-
-
-/* Produtos no carrinho */
-
-.item-carrinho {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-
-    padding: 12px 0;
-
-    border-bottom: 1px solid #395340;
-}
-
-.item-carrinho button {
-    background: #365b40;
-    color: white;
-
-    border: 0;
-    border-radius: 6px;
-
-    padding: 3px 9px;
-}
-
-
-/* Total e finalização */
-
-.total {
-    display: flex;
-    justify-content: space-between;
-
-    margin-top: 24px;
-}
-
-.finalizar {
-    width: 100%;
-}
-
-
-/* ==========================================
-   17. RESPONSIVIDADE - TABLETS
-========================================== */
-
-@media (max-width: 950px) {
-
-    .cards,
-    .produtos {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    nav {
-        gap: 10px;
-        font-size: 0.9rem;
-    }
-
-    .hero {
-        gap: 24px;
-    }
+    }).join('');
 
 }
 
 
 /* ==========================================
-   18. RESPONSIVIDADE - CELULARES
+   4. ATUALIZAR CARRINHO
 ========================================== */
 
-@media (max-width: 700px) {
+function atualizarCarrinho() {
 
-    /* Menu */
+    // Conta a quantidade total de produtos
 
-    .menu-toggle {
-        display: block;
+    const quantidadeTotal = carrinho.reduce((soma, item) => {
+        return soma + item.quantidade;
+    }, 0);
+
+    $('#contagem').textContent = quantidadeTotal;
+
+
+    // Exibe os produtos adicionados
+
+    if (carrinho.length > 0) {
+
+        $('#itens-carrinho').innerHTML = carrinho.map((item) => {
+
+            const preco = item.preco === null
+                ? 'A consultar'
+                : moeda(item.preco);
+
+            return `
+                <div class="item-carrinho">
+
+                    <div>
+
+                        <strong>${item.nome}</strong>
+
+                        <br>
+
+                        <small>
+                            ${item.quantidade} un. • ${preco}
+                        </small>
+
+                    </div>
+
+                    <div>
+
+                        <button
+                            data-menos="${item.id}"
+                            aria-label="Diminuir ${item.nome}"
+                        >
+                            −
+                        </button>
+
+                        <button
+                            data-mais="${item.id}"
+                            aria-label="Aumentar ${item.nome}"
+                        >
+                            +
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join('');
+
+    } else {
+
+        $('#itens-carrinho').innerHTML =
+            '<p>Seu carrinho está vazio.</p>';
+
     }
 
-    nav {
-        display: none;
 
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
+    // Verifica se algum produto está sem preço
 
-        background: #101b13;
-        padding: 20px;
-
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    nav.aberto {
-        display: flex;
-    }
+    const semPreco = carrinho.some((item) => {
+        return item.preco === null;
+    });
 
 
-    /* Página inicial */
+    // Calcula o valor total
 
-    .hero {
-        grid-template-columns: 1fr;
-
-        padding-top: 55px;
-        min-height: auto;
-    }
+    const total = carrinho.reduce((soma, item) => {
+        return soma + (item.preco ?? 0) * item.quantidade;
+    }, 0);
 
 
-    /* Seções */
+    // Exibe o total ou a mensagem de consulta
 
-    .secao {
-        padding: 60px 5%;
-    }
-
-
-    /* Galeria */
-
-    .galeria {
-        grid-template-columns: 1fr;
-    }
-
-    .galeria img {
-        height: auto;
-    }
+    $('#total').textContent = semPreco
+        ? 'A consultar'
+        : moeda(total);
 
 
-    /* Horários */
+    // Desativa o botão se o carrinho estiver vazio
 
-    .secao-horarios {
-        padding-top: 48px;
-        padding-bottom: 48px;
-    }
-
-    .secao-horarios .horarios-loja {
-        padding: 16px;
-    }
-
-
-    /* Localização */
-
-    .localizacao-grid {
-        grid-template-columns: 1fr;
-        gap: 24px;
-    }
+    $('#finalizar').disabled = carrinho.length === 0;
 
 }
 
 
 /* ==========================================
-   19. RESPONSIVIDADE - TELAS PEQUENAS
+   5. ABRIR E FECHAR CARRINHO
 ========================================== */
 
-@media (max-width: 480px) {
+function abrirCarrinho(aberto) {
 
-    .cards,
-    .produtos {
-        grid-template-columns: 1fr;
-    }
+    const painel = $('#painel-carrinho');
+    const overlay = $('#overlay');
 
-    .hero h1 {
-        font-size: 2.2rem;
-    }
+    painel.classList.toggle('aberto', aberto);
+
+    painel.setAttribute(
+        'aria-hidden',
+        String(!aberto)
+    );
+
+    overlay.hidden = !aberto;
 
 }
 
 
 /* ==========================================
-   20. AJUSTES PARA TELAS ATÉ 420px
+   6. EVENTOS DOS PRODUTOS
 ========================================== */
 
-@media (max-width: 420px) {
+document.addEventListener('click', (evento) => {
 
-    .horarios-loja {
-        padding: 14px;
+    const add = evento.target.closest('[data-add]');
+
+    const mais = evento.target.closest('[data-mais]');
+
+    const menos = evento.target.closest('[data-menos]');
+
+
+    // ADICIONAR PRODUTO AO CARRINHO
+
+    if (add) {
+
+        const produto = produtos.find((produto) => {
+            return produto.id === Number(add.dataset.add);
+        });
+
+        if (!produto) return;
+
+        const item = carrinho.find((item) => {
+            return item.id === produto.id;
+        });
+
+        if (item) {
+
+            item.quantidade++;
+
+        } else {
+
+            carrinho.push({
+                ...produto,
+                quantidade: 1
+            });
+
+        }
+
+        atualizarCarrinho();
+        abrirCarrinho(true);
+
     }
 
-    .horarios-loja dl > div {
-        gap: 8px;
+
+    // AUMENTAR QUANTIDADE
+
+    if (mais) {
+
+        const item = carrinho.find((item) => {
+            return item.id === Number(mais.dataset.mais);
+        });
+
+        if (item) {
+            item.quantidade++;
+            atualizarCarrinho();
+        }
+
     }
 
-}
+
+    // DIMINUIR QUANTIDADE
+
+    if (menos) {
+
+        const item = carrinho.find((item) => {
+            return item.id === Number(menos.dataset.menos);
+        });
+
+        if (item) {
+
+            item.quantidade--;
+
+            // Remove produtos com quantidade zero
+
+            carrinho = carrinho.filter((produto) => {
+                return produto.quantidade > 0;
+            });
+
+            atualizarCarrinho();
+
+        }
+
+    }
+
+
+    /* ======================================
+       7. FILTROS DO CATÁLOGO
+    ====================================== */
+
+    const filtro = evento.target.closest('[data-filtro]');
+
+    if (filtro) {
+
+        // Remove a classe ativo dos outros filtros
+
+        document.querySelectorAll('.filtro').forEach((botao) => {
+            botao.classList.remove('ativo');
+        });
+
+        // Ativa o filtro selecionado
+
+        filtro.classList.add('ativo');
+
+        // Atualiza os produtos exibidos
+
+        renderProdutos(filtro.dataset.filtro);
+
+    }
+
+});
 
 
 /* ==========================================
-   21. ACESSIBILIDADE
+   8. BOTÕES DO CARRINHO
 ========================================== */
 
-/* Reduz animações quando solicitado
-   nas configurações do dispositivo */
+// Abrir carrinho
 
-@media (prefers-reduced-motion: reduce) {
+$('#abrir-carrinho').onclick = () => {
+    abrirCarrinho(true);
+};
 
-    html {
-        scroll-behavior: auto;
+// Fechar carrinho
+
+$('#fechar-carrinho').onclick = () => {
+    abrirCarrinho(false);
+};
+
+// Fechar ao clicar fora
+
+$('#overlay').onclick = () => {
+    abrirCarrinho(false);
+};
+
+
+/* ==========================================
+   9. FINALIZAR PEDIDO PELO WHATSAPP
+========================================== */
+
+$('#finalizar').onclick = () => {
+
+    // Não permite finalizar carrinho vazio
+
+    if (carrinho.length === 0) {
+        return;
     }
 
-    .card,
-    .produto,
-    .botao,
-    .produto button,
-    .cart-btn {
-        transition: none;
+
+    // Organiza os produtos da mensagem
+
+    const linhas = carrinho.map((item) => {
+
+        const preco = item.preco === null
+            ? 'preço a consultar'
+            : moeda(item.preco);
+
+        return `• ${item.nome} — ${item.quantidade} un. (${preco})`;
+
+    }).join('\n');
+
+
+    // Mensagem enviada para a loja
+
+    const mensagem = `
+Olá, AFONSO FUMÊ!
+
+Gostaria de consultar a disponibilidade e os valores destes itens:
+
+${linhas}
+
+Os itens do site são demonstrativos.
+Aguardo confirmação de estoque e preços.
+    `.trim();
+
+
+    // Abre o WhatsApp com a mensagem
+
+    const link = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+
+    window.open(link, '_blank', 'noopener');
+
+};
+
+
+/* ==========================================
+   10. MENU RESPONSIVO
+========================================== */
+
+// Abrir e fechar menu no celular
+
+$('.menu-toggle').onclick = () => {
+
+    const aberto = $('#menu').classList.toggle('aberto');
+
+    $('.menu-toggle').setAttribute(
+        'aria-expanded',
+        String(aberto)
+    );
+
+};
+
+
+// Fechar menu ao selecionar uma seção
+
+document.querySelectorAll('nav a').forEach((link) => {
+
+    link.onclick = () => {
+
+        $('#menu').classList.remove('aberto');
+
+        $('.menu-toggle').setAttribute(
+            'aria-expanded',
+            'false'
+        );
+
+    };
+
+});
+
+
+/* ==========================================
+   11. TECLA ESCAPE
+========================================== */
+
+// Fecha o carrinho ao pressionar ESC
+
+document.addEventListener('keydown', (evento) => {
+
+    if (evento.key === 'Escape') {
+        abrirCarrinho(false);
     }
 
-    .card:hover,
-    .produto:hover,
-    .botao:hover,
-    .produto button:hover {
-        transform: none;
-    }
+});
 
-}
+
+/* ==========================================
+   12. ANO AUTOMÁTICO DO RODAPÉ
+========================================== */
+
+$('#ano').textContent = new Date().getFullYear();
+
+
+/* ==========================================
+   13. INICIALIZAÇÃO DO SITE
+========================================== */
+
+// Carrega os produtos no catálogo
+
+renderProdutos();
+
+// Atualiza o carrinho inicialmente
+
+atualizarCarrinho();
